@@ -1,8 +1,11 @@
 # PROYECTO: CORREOS DE CHILE - DATA WAREHOUSE Y ETL
 
 **Autores:** Johnny Valladares - Daniel Vergara
+
 **Asignatura:** Arquitectura y Almacenamiento de Datos
-**Evaluacion:** Sumativa N°3 - Herramientas de Implementacion (Pentaho)
+
+**Evaluacion:** Sumativa N°3 - Herramientas de Implementacio(Pentaho)
+
 **Fecha:** Junio 2026
 
 ---
