@@ -1,0 +1,162 @@
+================================================================================
+PROYECTO: CORREOS DE CHILE - DATA WAREHOUSE Y ETL
+================================================================================
+
+AUTORES: Johnny Valladares - Daniel Vergara
+ASIGNATURA: Arquitectura y Almacenamiento de Datos
+EVALUACION: Sumativa N°3 - Herramientas de Implementacion (Pentaho)
+FECHA: Junio 2026
+
+================================================================================
+DESCRIPCION DEL PROYECTO
+================================================================================
+
+Este proyecto implementa un Data Warehouse para Correos de Chile utilizando 
+Pentaho Data Integration (PDI) como herramienta ETL y MySQL como base de datos.
+
+El proceso ETL:
+1. Extrae datos desde un CSV con 2000 transacciones de envios
+2. Carga los datos a una tabla staging (staging_envios)
+3. Transforma los datos a un modelo estrella (dimensiones + hechos)
+4. Permite consultas analiticas para la toma de decisiones
+
+================================================================================
+ESTRUCTURA DE ARCHIVOS
+================================================================================
+
+01_crear_bbdd.sql                 - Crea la base de datos y todas las tablas
+02_cargar_dimensiones_y_hechos.sql - Transforma staging a modelo estrella
+03_verificar_carga.sql             - Verifica que todo se cargo correctamente
+carga_staging.ktr                  - Transformacion Pentaho (CSV -> staging)
+job_correos_etl.kjb                - Job Pentaho que orquesta todo el proceso
+Correos_Transacciones_2000.csv     - Dataset con 2000 transacciones
+
+Archivos adicionales (trabajo de Daniel Vergara):
+Trans_01_DimSucursal.ktr          - Carga directa a DimSucursal
+Trans_02_DimTipoServicio.ktr      - Carga directa a DimTipoServicio
+Trans_03_DimCliente.ktr           - Carga directa a DimCliente
+Trans_04_DimTiempo.ktr            - Carga directa a DimTiempo
+Trans_05_DimRuta.ktr              - Carga directa a DimRuta
+Trans_HechosEnvio.ktr             - Carga directa a HechosEnvio
+JOB_CorreosChile_ETL.kjb          - Job con 6 transformaciones
+
+================================================================================
+REQUISITOS PARA EJECUTAR
+================================================================================
+
+- Java 8 o superior (incluido en carpeta Instalacion/)
+- MySQL 8.0 o superior
+- Pentaho Data Integration 9.4 (incluido en carpeta Instalacion/)
+- MySQL Workbench (opcional, para ejecutar scripts)
+
+================================================================================
+PASOS PARA EJECUTAR EL PROYECTO
+================================================================================
+
+PASO 1: Instalar Java
+------------------------
+Ejecutar el instalador Java 8 de la carpeta Instalacion/
+Verificar con: java -version
+
+PASO 2: Instalar MySQL
+------------------------
+Descargar MySQL Installer desde mysql.com
+Instalar MySQL Server 8.0 y MySQL Workbench
+Configurar: puerto 3306, usuario root, contraseña vacia
+
+PASO 3: Configurar Pentaho
+------------------------
+Copiar carpeta "Data Integration" a C:\Pentaho\
+Ejecutable: C:\Pentaho\Data Integration\Spoon.bat
+
+PASO 4: Crear la base de datos
+------------------------
+Abrir MySQL Workbench
+Ejecutar el script: 01_crear_bbdd.sql
+
+PASO 5: Configurar conexion en Pentaho
+------------------------
+Abrir Spoon.bat
+En "View" -> Database connections -> New
+Connection Name: Connexion_correos_DW
+Connection Type: MySQL
+Hostname: localhost
+Database Name: CorreosChile_DW
+Port: 3306
+Username: root
+Password: contraseña_bbdd
+Probar conexion -> debe decir "Connected ! OK"
+
+PASO 6: Ejecutar el proceso ETL completo
+------------------------
+OPCION A (enfoque staging + SQL):
+  - Abrir job_correos_etl.kjb en Spoon
+  - Hacer clic en RUN (verde)
+  - Esperar a que termine
+
+OPCION B (enfoque transformaciones individuales):
+  - Abrir JOB_CorreosChile_ETL.kjb en Spoon
+  - Hacer clic en RUN (verde)
+  - Esperar a que termine
+
+PASO 7: Verificar la carga
+------------------------
+En MySQL Workbench ejecutar: 03_verificar_carga.sql
+
+================================================================================
+RESULTADO ESPERADO
+================================================================================
+
+Tabla               | Cantidad
+--------------------|----------
+staging_envios      | 2000
+DimCliente          | ~1651
+DimSucursal         | 5
+DimRuta             | 25
+DimTipoServicio     | 4
+DimTiempo           | ~460
+HechosEnvio         | 2000
+
+================================================================================
+CONSULTAS ANALITICAS DE EJEMPLO
+================================================================================
+
+-- Top 5 clientes por monto de envios
+SELECT c.ID_Cliente, c.Tipo_Cliente, SUM(h.Monto_Servicio) AS Total
+FROM HechosEnvio h
+JOIN DimCliente c ON h.ID_Cliente = c.ID_Cliente
+GROUP BY c.ID_Cliente, c.Tipo_Cliente
+ORDER BY Total DESC LIMIT 5;
+
+-- Rutas con mayores demoras
+SELECT r.Region_Origen, r.Region_Destino, AVG(h.Dias_Transito) AS Promedio
+FROM HechosEnvio h
+JOIN DimRuta r ON h.ID_Ruta = r.ID_Ruta
+WHERE h.Dias_Transito IS NOT NULL
+GROUP BY r.Region_Origen, r.Region_Destino
+ORDER BY Promedio DESC LIMIT 10;
+
+-- Envios por mes
+SELECT YEAR(t.Fecha) AS Anio, MONTH(t.Fecha) AS Mes, COUNT(*) AS Total
+FROM HechosEnvio h
+JOIN DimTiempo t ON h.ID_Tiempo_Origen = t.ID_Tiempo
+GROUP BY YEAR(t.Fecha), MONTH(t.Fecha)
+ORDER BY Anio DESC, Mes DESC;
+
+================================================================================
+ENLACES DE INTERES
+================================================================================
+
+Repositorio GitHub: https://github.com/JohnnyAlex77/CorreosChile-DataWarehouse-ETL
+Instaladores (Java + Pentaho): https://inacapmailcl-my.sharepoint.com/:f:/g/personal/johnny_valladares_inacapmail_cl/IgDv67BN8fxeRIQ2fgzOVTDfASKetYRhTODbdmOEKcXoOmE?e=Qrf5hs
+
+================================================================================
+CONTACTO
+================================================================================
+
+Johnny Valladares - @JohnnyAlex77 (GitHub)
+Daniel Vergara
+
+================================================================================
+LICENCIA: MIT
+================================================================================
